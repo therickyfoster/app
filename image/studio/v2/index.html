@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Professional Studio — Workbench</title>
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="manifest" href="data:application/manifest+json,{\n  \"name\": \"Professional Studio — Workbench\",\n  \"short_name\": \"Studio\",\n  \"start_url\": \".\",\n  \"display\": \"standalone\",\n  \"background_color\": \"#0b1220\",\n  \"theme_color\": \"#0b1220\"\n}"
+  />
+  <style>
+    :root{
+      --bg:#0b1220;--panel:#111a2d;--muted:#1a2540;--ink:#e6ecff;--ink-2:#a9b4d0;--blue:#5b8eff;--cyan:#22d3ee;--green:#34d399;--yellow:#f59e0b;--red:#ef4444;--purple:#a78bfa;--ring:#2a3a66;
+      --radius:16px;--radius-sm:10px;--gap:14px;font-synthesis-weight:none;text-rendering:optimizeLegibility;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#091020 60%,#0b1220);color:var(--ink);font:14px/1.2 system-ui,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .app{display:flex;flex-direction:column;min-height:100svh}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,#0e1730,#0c152a)}
+    .brand{display:flex;align-items:center;gap:10px}
+    .dot{width:10px;height:10px;border-radius:50%;background:conic-gradient(from 0turn,var(--cyan),var(--blue),var(--purple),var(--cyan))}
+    .select,.input,.btn,.chip,.seg{border-radius:var(--radius-sm);border:1px solid #22315a;background:#0f1830;color:var(--ink)}
+    .btn{padding:8px 12px;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,#2a6bff,#325cff);border-color:#3050c9}
+    .btn.ghost{background:#111a2d}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap)}
+    .card{background:linear-gradient(180deg,#0f1933 0,#0e1830 60%,#0f1933);border:1px solid var(--ring);border-radius:var(--radius);padding:16px}
+    .main{display:grid;grid-template-columns:260px 1fr 300px;gap:var(--gap);padding:var(--gap);flex:1}
+    .side,.content,.rail{min-height:0}
+    .side{background:linear-gradient(180deg,#0e1730,#0e1630);border:1px solid var(--ring);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px}
+    .navbtn{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid #19254a;background:#0e1730;cursor:pointer}
+    .navbtn.active{background:#162449;border-color:#28407c}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .grid{display:grid;gap:var(--gap)}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .tag{background:#17244a;border:1px solid #2a3a66;color:#bcd0ff;border-radius:999px;padding:4px 8px;font-size:12px}
+    .progress{height:8px;background:#152044;border-radius:999px;overflow:hidden}
+    .progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:999px}
+    .muted{color:var(--ink-2)}
+    .chip{padding:6px 8px;font-size:12px;background:#0e1730}
+    .rail{background:linear-gradient(180deg,#0e1730,#0e1630);border:1px solid var(--ring);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:12px}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid #1a2548;border-radius:12px;background:#0f1933}
+    .filebadge{width:40px;height:40px;border-radius:10px;background:#2141a6;display:grid;place-items:center;font-weight:700}
+    .icon{width:16px;height:16px;display:inline-block}
+    .icon svg{display:block}
+    .search{position:relative}
+    .search input{width:100%;padding:10px 12px 10px 34px}
+    .search .icon{position:absolute;left:10px;top:50%;transform:translateY(-50%)}
+    .divider{height:1px;background:#1a2548;margin:6px 0}
+    .pill{border-radius:999px;border:1px solid #1f2e57;padding:2px}
+    .pill button{border:none;background:none;color:var(--ink-2);padding:6px 10px;border-radius:999px;cursor:pointer}
+    .pill button.active{background:#1a2d5c;color:white}
+    .rss-card a{color:#bcd0ff;text-decoration:none}
+    .rss-card a:hover{text-decoration:underline}
+    .toast{position:fixed;right:16px;bottom:16px;background:#0f1933;border:1px solid #2a3a66;padding:10px 12px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        <strong>Professional Studio</strong>
+        <span class="muted">— online-first ▸ offline-fallback</span>
+      </div>
+      <div class="row">
+        <select class="select" id="projectPicker"></select>
+        <button class="btn" id="trackBtn">▶ Track</button>
+        <span class="chip" id="todayChip">0h 00m today</span>
+        <button class="btn ghost" id="syncBtn">⟳ Sync</button>
+        <button class="btn primary" id="saveBundleBtn">⬇ Export Bundle</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Left Nav -->
+      <nav class="side" id="leftNav">
+        <button class="navbtn active" data-tab="overview">📄 Overview</button>
+        <button class="navbtn" data-tab="collab">👥 Collaborate</button>
+        <button class="navbtn" data-tab="versions">⏱ Versions</button>
+        <button class="navbtn" data-tab="assets">📦 Assets</button>
+        <button class="navbtn" data-tab="workflow">🛠 Workflow</button>
+        <button class="navbtn" data-tab="export">⬇ Export</button>
+        <div class="divider"></div>
+        <div class="pill" id="themeSwitch">
+          <button data-theme="dark" class="active">Dark</button>
+          <button data-theme="light">Light</button>
+        </div>
+        <div class="divider"></div>
+        <small class="muted">PWA ready • caches scripts, styles & last RSS</small>
+      </nav>
+
+      <!-- Content -->
+      <section class="content" id="content"></section>
+
+      <!-- Right Rail -->
+      <aside class="rail">
+        <div class="card">
+          <h3 style="margin-top:0">Quick Actions</h3>
+          <div class="grid cols-2">
+            <button class="btn" id="saveVersionBtn">Save Version</button>
+            <button class="btn" id="shareBtn">Share for Review</button>
+            <button class="btn" id="genVariantsBtn">Generate Variants</button>
+            <button class="btn" id="exportAllBtn">Export All</button>
+          </div>
+        </div>
+        <div class="card" id="statsCard">
+          <h3 style="margin-top:0">Project Stats</h3>
+          <div class="list" id="statsList"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">Recent Activity</h3>
+          <div class="list" id="activityList"></div>
+        </div>
+        <div class="card rss-card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h3 style="margin:0">News (RSS)</h3>
+            <button class="btn" id="refreshRss">⟳</button>
+          </div>
+          <div class="search" style="margin:8px 0 10px">
+            <span class="icon">🔎</span>
+            <input id="rssSearch" class="input" placeholder="Filter headlines..." />
+          </div>
+          <div class="list" id="rssList"></div>
+          <details style="margin-top:8px">
+            <summary class="muted">Feeds</summary>
+            <div class="list" id="feedList"></div>
+            <div class="row">
+              <input id="newFeed" class="input" placeholder="https://example.com/feed" style="flex:1"/>
+              <button class="btn" id="addFeedBtn">＋</button>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <template id="tpl-overview">
+    <div class="grid cols-1">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div class="col" style="flex:1">
+            <h2 id="projName" style="margin:0"></h2>
+            <div class="row">
+              <span class="tag" id="projStatus"></span>
+              <span class="tag" id="projPriority"></span>
+              <span class="tag" id="projClient"></span>
+              <span class="tag" id="projModified"></span>
+            </div>
+            <div class="col" style="gap:8px;margin-top:10px">
+              <div class="muted">Progress</div>
+              <div class="progress"><i id="projProg" style="width:0%"></i></div>
+            </div>
+            <div class="row" id="tagWrap" style="flex-wrap:wrap;margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Recent Files</h3>
+        <div class="list" id="fileList"></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-collab">
+    <div class="grid cols-1">
+      <div class="card">
+        <h3 style="margin-top:0">Active Collaborators</h3>
+        <div class="list" id="collabList"></div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h3 style="margin:0">Comments & Feedback</h3>
+          <button class="btn" id="toggleComments">Hide</button>
+        </div>
+        <div class="list" id="commentList"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="newComment" class="input" placeholder="Add a comment…" style="flex:1" />
+          <button class="btn" id="addCommentBtn">Add</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-versions">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Version History</h3>
+        <button class="btn" id="createVersionBtn">Create Version</button>
+      </div>
+      <div class="list" id="versionList"></div>
+    </div>
+  </template>
+
+  <template id="tpl-assets">
+    <div class="grid cols-1">
+      <div class="card">
+        <div class="row">
+          <div class="search" style="flex:1">
+            <span class="icon">🔎</span>
+            <input id="assetSearch" class="input" placeholder="Search assets…"/>
+          </div>
+          <label class="btn" for="assetUpload">⬆ Upload Asset</label>
+          <input id="assetUpload" type="file" hidden multiple />
+        </div>
+      </div>
+      <div class="grid cols-3" id="assetGrid"></div>
+    </div>
+  </template>
+
+  <template id="tpl-workflow">
+    <div class="grid cols-1">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h3 style="margin:0">Automation Rules</h3>
+          <button class="btn" id="createRuleBtn">Create Rule</button>
+        </div>
+        <div class="list" id="ruleList"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Time Tracking</h3>
+        <div class="kpi">
+          <div class="card"><div class="muted">Today</div><div id="kpiToday" style="font-weight:700;font-size:20px">0h 00m</div></div>
+          <div class="card"><div class="muted">This Project</div><div id="kpiProject" style="font-weight:700;font-size:20px">0h 00m</div></div>
+          <div class="card"><div class="muted">Sessions</div><div id="kpiSessions" style="font-weight:700;font-size:20px">0</div></div>
+          <div class="card"><div class="muted">Tracking</div><div id="kpiState" style="font-weight:700;font-size:20px">Idle</div></div>
+        </div>
+        <div class="list" id="sessionList" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-export">
+    <div class="grid cols-2">
+      <div class="card">
+        <h3 style="margin-top:0">Export Presets</h3>
+        <div class="grid cols-2">
+          <button class="btn" data-preset="print">🖨 Print Ready</button>
+          <button class="btn" data-preset="web">🌐 Web Optimized</button>
+          <button class="btn" data-preset="social">🔗 Social Media</button>
+          <button class="btn" data-preset="mobile">📱 Mobile Assets</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Custom Export</h3>
+        <div class="grid cols-2">
+          <label>Format<select id="fmt" class="select"><option>PNG</option><option>JPEG</option><option>SVG</option><option>PDF</option><option>WebP</option></select></label>
+          <label>Quality<input id="qual" type="range" min="1" max="100" value="90" class="input"/></label>
+          <label>Color Space<select id="cs" class="select"><option>RGB</option><option>CMYK</option><option>sRGB</option><option>Adobe RGB</option></select></label>
+          <label>Resolution (DPI)<input id="dpi" type="number" value="300" class="input"/></label>
+          <label>Width<input id="w" type="number" placeholder="px" class="input"/></label>
+          <label>Height<input id="h" type="number" placeholder="px" class="input"/></label>
+          <label class="row" style="align-items:center;gap:8px"><input id="transparent" type="checkbox"/> Transparent</label>
+          <button id="runCustomExport" class="btn primary">Export with Custom Settings</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <div class="toast hidden" id="toast"></div>
+
+  <script>
+    // --- Utilities ---------------------------------------------------------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const fmtTime = (ms) => {
+      const m = Math.round(ms/60000); const h = Math.floor(m/60); const mm = String(m%60).padStart(2,'0');
+      return `${h}h ${mm}m`;
+    };
+    const humanDate = (d) => new Date(d).toLocaleString();
+
+    // --- IndexedDB (tiny helper) ------------------------------------------
+    const idb = (() => {
+      const DB = 'studio.db'; const VER = 1; const STORE = 'kv';
+      let dbp;
+      function open(){
+        if(dbp) return dbp;
+        dbp = new Promise((res,rej)=>{
+          const r = indexedDB.open(DB, VER);
+          r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+        return dbp;
+      }
+      async function get(key){ const db=await open(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE); const st=tx.objectStore(STORE); const rq=st.get(key); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+      async function set(key,val){ const db=await open(); return new Promise((res,rej)=>{ const tx=db.transaction(STORE,'readwrite'); const st=tx.objectStore(STORE); const rq=st.put(val,key); rq.onsuccess=()=>res(); rq.onerror=()=>rej(rq.error); }); }
+      return {get,set};
+    })();
+
+    // --- Seed Data (extended from your React example) ---------------------
+    const seed = {
+      projects: [
+        { id:1, name:'Brand Identity Redesign', client:'TechCorp Inc.', status:'In Progress', priority:'High', progress:75, lastModified:'2025-08-15', collaborators:['john@example.com','sarah@design.co'], tags:['branding','logo','colors'], files:[ {name:'logo-v1.psd', size:'24.5 MB', type:'psd', modified:Date.now()}, {name:'color-palette.ai', size:'1.2 MB', type:'ai', modified:Date.now()} ] },
+        { id:2, name:'Website Mockups', client:'StartupXYZ', status:'Review', priority:'Medium', progress:90, lastModified:'2025-08-14', collaborators:['mike@startup.xyz'], tags:['web','ui','responsive'], files:[ {name:'homepage-desktop.fig', size:'15.8 MB', type:'fig', modified:Date.now()}, {name:'mobile-views.sketch', size:'8.4 MB', type:'sketch', modified:Date.now()} ] }
+      ],
+      collaborators:[ {id:1,name:'John Doe',email:'john@example.com',avatar:'👨‍💼',status:'online'},{id:2,name:'Sarah Chen',email:'sarah@design.co',avatar:'👩‍🎨',status:'away'} ],
+      comments:[ { id:1, author:'John Doe', content:'The logo needs more contrast. Can we try a darker blue?', timestamp:'2025-08-17T10:30:00', resolved:false, replies:[ {id:2, author:'Sarah Chen', content:'Good point! I\'ll update the color palette.', timestamp:'2025-08-17T11:15:00'} ] } ],
+      versions:[ { id:1, version:'v3.2', author:'Sarah Chen', timestamp:'2025-08-17T09:00:00', description:'Updated logo proportions and added new color variants', thumbTxt:'Logo v3.2', changes:['Modified logo proportions','Added 3 color variants','Optimized for mobile'] }, { id:2, version:'v3.1', author:'John Doe', timestamp:'2025-08-16T16:45:00', description:'Initial brand guidelines implementation', thumbTxt:'Logo v3.1', changes:['Created base logo design','Added typography guide','Set color palette'] } ],
+      assets:[ { id:1, name:'Corporate Logo', type:'logo', format:'SVG', size:'2.4 KB', tags:['primary','vector','scalable'], lastUsed:'2025-08-17', usage:15 }, { id:2, name:'Brand Colors', type:'palette', format:'ASE', size:'1.1 KB', tags:['primary','brand','colors'], lastUsed:'2025-08-16', usage:8 } ],
+      rules:[ {id:1,name:'Auto Export to Web',trigger:'On Save',actions:['Export PNG @2x','Optimize for web','Upload to CDN'],enabled:true,lastRun:'2025-08-17T12:30:00'},{id:2,name:'Generate Social Media Variants',trigger:'Manual',actions:['Resize for Instagram','Resize for Facebook','Resize for Twitter'],enabled:true,lastRun:'2025-08-16T14:15:00'} ],
+      time:{ isTracking:false, sessionStart:null, currentTask:null, totalToday:145*60000, totalProject:1280*60000, sessions:[ {start:'2025-08-17T09:00:00',end:'2025-08-17T10:30:00',task:'Logo refinement', duration:90}, {start:'2025-08-17T11:00:00',end:'2025-08-17T12:15:00',task:'Color palette adjustment', duration:75} ] },
+      feeds:[
+        'https://feeds.bbci.co.uk/news/world/rss.xml',
+        'https://www.reuters.com/world/rss',
+        'https://rss.nytimes.com/services/xml/rss/nyt/World.xml'
+      ]
+    };
+
+    // --- App State --------------------------------------------------------
+    const state = {
+      projects: [], collaborators: [], comments: [], versions: [], assets: [], rules: [], time: {}, feeds: [],
+      activeTab:'overview', selectedProjectId:1, showComments:true, theme:'dark', rssCache:[],
+    };
+
+    // --- Service Worker (online-first + offline fallback) -----------------
+    const swCode = `self.addEventListener('install', e=>{self.skipWaiting();e.waitUntil(caches.open('studio-v1').then(c=>c.addAll(['./'])))});
+self.addEventListener('activate', e=>{clients.claim()});
+self.addEventListener('fetch', e=>{
+  const u = new URL(e.request.url);
+  // online-first for same-origin; cache-last-success for RSS JSON too
+  if(u.origin===location.origin){
+    e.respondWith(fetch(e.request).then(r=>{const cc=r.clone();caches.open('studio-v1').then(c=>c.put(e.request,cc));return r}).catch(()=>caches.match(e.request)));
+  } else {
+    e.respondWith(fetch(e.request).then(r=>{const cc=r.clone();caches.open('studio-v1').then(c=>c.put(e.request,cc));return r}).catch(()=>caches.match(e.request)));
+  }
+});`;
+    (async function ensureSW(){
+      if('serviceWorker' in navigator){
+        const blob = new Blob([swCode], {type:'text/javascript'});
+        const url = URL.createObjectURL(blob);
+        try { await navigator.serviceWorker.register(url); } catch(e){ console.warn('SW failed', e); }
+      }
+    })();
+
+    // --- Boot -------------------------------------------------------------
+    (async function boot(){
+      const saved = await idb.get('studio');
+      Object.assign(state, saved || seed);
+      state.activeTab = saved?.activeTab || 'overview';
+      state.selectedProjectId = saved?.selectedProjectId || state.projects[0]?.id || 1;
+      state.theme = saved?.theme || 'dark';
+      drawChrome();
+      route(state.activeTab);
+      loadRSS();
+      tick();
+    })();
+
+    async function persist(){ await idb.set('studio', JSON.parse(JSON.stringify(state))); }
+
+    // --- UI Chrome --------------------------------------------------------
+    function drawChrome(){
+      // project picker
+      const picker = $('#projectPicker');
+      picker.innerHTML = state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      picker.value = String(state.selectedProjectId);
+      picker.onchange = ()=>{ state.selectedProjectId = Number(picker.value); persist(); route(state.activeTab); refreshStats(); };
+
+      // theme switch
+      $('#themeSwitch').addEventListener('click', (e)=>{
+        const t = e.target?.dataset?.theme; if(!t) return;
+        $$('#themeSwitch button').forEach(b=>b.classList.toggle('active', b.dataset.theme===t));
+        state.theme = t; document.body.style.background = t==='light' ? '#f7f9ff' : 'linear-gradient(180deg,#0b1220,#091020 60%,#0b1220)'; persist();
+      });
+
+      // left nav
+      $$('#leftNav .navbtn').forEach(b=>{
+        b.classList.toggle('active', b.dataset.tab===state.activeTab);
+        b.onclick = ()=>{ state.activeTab=b.dataset.tab; persist(); route(state.activeTab); };
+      });
+
+      // quick actions
+      $('#saveVersionBtn').onclick = createVersion;
+      $('#shareBtn').onclick = ()=>toast('Share link copied (pretend).');
+      $('#genVariantsBtn').onclick = ()=>toast('Generated 3 variants (simulated).');
+      $('#exportAllBtn').onclick = ()=>toast('Exported all presets (simulated).');
+      $('#saveBundleBtn').onclick = exportBundle;
+      $('#syncBtn').onclick = ()=>{ persist().then(()=>toast('Synced locally.')); };
+
+      // tracking button
+      $('#trackBtn').onclick = ()=>{
+        if(state.time.isTracking){ stopTracking(); } else { startTracking('Design work'); }
+        updateTimeChrome(); route('workflow');
+      };
+
+      updateTimeChrome(); refreshStats(); refreshActivity();
+
+      // RSS controls
+      $('#refreshRss').onclick = loadRSS;
+      $('#addFeedBtn').onclick = addFeed;
+      $('#rssSearch').oninput = () => renderRSS(state.rssCache);
+      renderFeedList();
+    }
+
+    function updateTimeChrome(){ $('#todayChip').textContent = fmtTime(state.time.totalToday||0); $('#trackBtn').textContent = state.time.isTracking ? '■ Stop' : '▶ Track'; }
+
+    function refreshStats(){
+      const p = state.projects.find(p=>p.id===state.selectedProjectId);
+      const list = $('#statsList');
+      list.innerHTML = `
+        <div class="row"><span class="muted">Files</span><span>${p.files.length}</span></div>
+        <div class="row"><span class="muted">Collaborators</span><span>${p.collaborators.length}</span></div>
+        <div class="row"><span class="muted">Comments</span><span>${state.comments.filter(c=>!c.resolved).length} active</span></div>
+        <div class="row"><span class="muted">Versions</span><span>${state.versions.length}</span></div>
+      `;
+    }
+
+    function refreshActivity(){
+      const acts = [
+        { t:'Sarah updated logo design', ago:'2 hours ago' },
+        { t:'John added a comment', ago:'4 hours ago' },
+        { t:'New asset uploaded', ago:'1 day ago' },
+      ];
+      $('#activityList').innerHTML = acts.map(a=>`<div class="row"><div>🕒</div><div><div>${a.t}</div><div class="muted" style="font-size:12px">${a.ago}</div></div></div>`).join('');
+    }
+
+    // --- Routing ----------------------------------------------------------
+    function route(tab){
+      state.activeTab = tab;
+      $$('#leftNav .navbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+      const host = $('#content'); host.innerHTML = '';
+      const p = state.projects.find(p=>p.id===state.selectedProjectId);
+      if(tab==='overview') drawOverview(host, p);
+      if(tab==='collab') drawCollab(host);
+      if(tab==='versions') drawVersions(host);
+      if(tab==='assets') drawAssets(host);
+      if(tab==='workflow') drawWorkflow(host);
+      if(tab==='export') drawExport(host);
+    }
+
+    // --- Views ------------------------------------------------------------
+    function drawOverview(host, p){
+      const tpl = $('#tpl-overview').content.cloneNode(true);
+      $('#projName', tpl).textContent = p.name;
+      $('#projStatus', tpl).textContent = p.status;
+      $('#projPriority', tpl).textContent = `Priority: ${p.priority}`;
+      $('#projClient', tpl).textContent = `Client: ${p.client}`;
+      $('#projModified', tpl).textContent = `Modified: ${new Date(p.lastModified).toLocaleDateString()}`;
+      $('#projProg', tpl).style.width = p.progress+'%';
+      const tw = $('#tagWrap', tpl); tw.innerHTML = p.tags.map(t=>`<span class="tag">#${t}</span>`).join('');
+      const files = $('#fileList', tpl);
+      files.innerHTML = p.files.map(f=>`<div class="item"><div class="row"><div class="filebadge">${(f.type||'file').toUpperCase()}</div><div class="col"><strong>${f.name}</strong><span class="muted" style="font-size:12px">${f.size} • Modified ${new Date(f.modified).toLocaleDateString()}</span></div></div><div class="row"><button class="btn">👁</button><button class="btn">✏️</button><button class="btn">🔗</button></div></div>`).join('');
+      host.appendChild(tpl);
+    }
+
+    function drawCollab(host){
+      const tpl = $('#tpl-collab').content.cloneNode(true);
+      const list = $('#collabList', tpl);
+      list.innerHTML = state.collaborators.map(u=>`<div class="item"><div class="row"><div style="width:40px;height:40px;border-radius:50%;background:#2141a6;display:grid;place-items:center">${u.avatar}</div><div><div><strong>${u.name}</strong></div><div class="muted" style="font-size:12px">${u.email}</div></div></div><div class="row" style="gap:6px"><span class="chip" style="background:${u.status==='online'?'#0f2d1e':'#2c2a12'};border-color:${u.status==='online'?'#1d6b43':'#6b5d1d'}">${u.status}</span></div></div>`).join('');
+      const cl = $('#commentList', tpl);
+      cl.innerHTML = state.comments.map(c=>`<div class="item" style="align-items:flex-start;opacity:${c.resolved?.valueOf()?0.65:1}"><div class="col" style="flex:1"><div class="row" style="justify-content:space-between"><div><strong>${c.author}</strong> <span class="muted" style="font-size:12px">${humanDate(c.timestamp)}</span></div>${!c.resolved?`<button class="btn" data-resolve="${c.id}">✔ Resolve</button>`:''}</div><div>${c.content}</div><div class="col" style="margin-top:8px">${(c.replies||[]).map(r=>`<div class="row" style="gap:6px"><strong>${r.author}</strong><span class="muted" style="font-size:12px">${humanDate(r.timestamp)}</span></div><div class="muted">${r.content}</div>`).join('')}</div></div></div>`).join('');
+      cl.addEventListener('click', (e)=>{ const id=e.target?.dataset?.resolve; if(!id) return; const cm=state.comments.find(x=>String(x.id)===String(id)); if(cm){ cm.resolved=true; persist(); route('collab'); refreshStats(); } });
+      $('#toggleComments', tpl).onclick = ()=>{ state.showComments=!state.showComments; persist(); route('collab'); };
+      $('#newComment', tpl).addEventListener('keydown', e=>{ if(e.key==='Enter') $('#addCommentBtn', tpl).click(); });
+      $('#addCommentBtn', tpl).onclick = ()=>{
+        const inp = $('#newComment', tpl); if(!inp.value.trim()) return;
+        state.comments.push({id:Date.now(),author:'Current User',content:inp.value.trim(),timestamp:Date.now(),resolved:false,replies:[]});
+        inp.value=''; persist(); route('collab'); refreshStats();
+      };
+      host.appendChild(tpl);
+    }
+
+    function drawVersions(host){
+      const tpl = $('#tpl-versions').content.cloneNode(true);
+      const list = $('#versionList', tpl);
+      list.innerHTML = state.versions.map(v=>{
+        const thumb = `<svg width="120" height="70" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#1b2c5b"/><text x="50%" y="50%" fill="#cfe0ff" font-size="14" text-anchor="middle" dominant-baseline="middle">${v.thumbTxt||v.version}</text></svg>`;
+        return `<div class="item"><div class="row" style="gap:12px"><img alt="thumb" width="120" height="70" src="data:image/svg+xml,${encodeURIComponent(thumb)}"/><div class="col"><div class="row" style="gap:8px;align-items:center"><strong>${v.version}</strong><span class="muted" style="font-size:12px">by ${v.author}</span><span class="muted" style="font-size:12px">${new Date(v.timestamp).toLocaleDateString()}</span></div><div class="muted">${v.description}</div><div class="muted" style="font-size:12px">Changes: ${(v.changes||[]).join(', ')}</div></div></div><div class="row"><button class="btn">👁</button><button class="btn">⟲</button><button class="btn">⬇</button></div></div>`;
+      }).join('');
+      $('#createVersionBtn', tpl).onclick = createVersion;
+      host.appendChild(tpl);
+    }
+
+    function drawAssets(host){
+      const tpl = $('#tpl-assets').content.cloneNode(true);
+      const grid = $('#assetGrid', tpl);
+      const render = () => {
+        const q = ($('#assetSearch', tpl).value||'').toLowerCase();
+        grid.innerHTML = state.assets.filter(a=>a.name.toLowerCase().includes(q) || (a.tags||[]).some(t=>t.toLowerCase().includes(q))).map(a=>`<div class="card"><div style="aspect-ratio:1/1;background:#12204a;border-radius:12px;display:grid;place-items:center;margin-bottom:8px"><div class="filebadge">${(a.format||'').toUpperCase().slice(0,3)}</div></div><strong>${a.name}</strong><div class="muted" style="font-size:12px">${a.format} • ${a.size}</div><div class="row" style="flex-wrap:wrap;margin:6px 0">${(a.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div><div class="muted" style="font-size:12px">Used ${a.usage||0} times • Last used ${new Date(a.lastUsed).toLocaleDateString()}</div></div>`).join('');
+      };
+      $('#assetSearch', tpl).oninput = render;
+      $('#assetUpload', tpl).onchange = async (e)=>{
+        const files = Array.from(e.target.files||[]);
+        for(const f of files){
+          state.assets.push({ id:Date.now()+Math.random(), name:f.name, type:'file', format:(f.name.split('.').pop()||'file').toUpperCase(), size:(f.size/1024).toFixed(1)+' KB', tags:[], lastUsed:Date.now(), usage:0 });
+        }
+        await persist(); render();
+      };
+      render();
+      host.appendChild(tpl);
+    }
+
+    function drawWorkflow(host){
+      const tpl = $('#tpl-workflow').content.cloneNode(true);
+      const list = $('#ruleList', tpl);
+      const renderRules = ()=>{ list.innerHTML = state.rules.map(r=>`<div class="item"><div class="col" style="flex:1"><div class="row" style="gap:8px;align-items:center"><strong>${r.name}</strong><span class="chip" style="background:${r.enabled?'#0f2d1e':'#2d2d2d'};border-color:${r.enabled?'#1d6b43':'#3d3d3d'}">${r.enabled?'enabled':'disabled'}</span></div><div class="muted">Trigger: ${r.trigger}</div><div>Actions: ${(r.actions||[]).join(' → ')}</div><div class="muted" style="font-size:12px">Last run: ${humanDate(r.lastRun)}</div></div><div class="row"><button class="btn" data-edit="${r.id}">✏️</button><button class="btn" data-run="${r.id}">▶</button><label class="row" style="gap:6px;align-items:center"><input type="checkbox" ${r.enabled?'checked':''} data-toggle="${r.id}"/> Enabled</label></div></div>`).join(''); };
+      list.onclick = (e)=>{
+        if(e.target?.dataset?.toggle){ const id=Number(e.target.dataset.toggle); const r=state.rules.find(x=>x.id===id); r.enabled=!r.enabled; persist(); renderRules(); return; }
+        if(e.target?.dataset?.run){ toast('Rule executed (sim)'); return; }
+        if(e.target?.dataset?.edit){ toast('Editor coming next build'); return; }
+      };
+      $('#createRuleBtn', tpl).onclick = ()=>{ state.rules.push({id:Date.now(),name:'New Rule',trigger:'Manual',actions:['—'],enabled:true,lastRun:Date.now()}); persist(); renderRules(); };
+      renderRules();
+
+      // Time tracking KPIs
+      const setKPIs = ()=>{
+        $('#kpiToday', tpl).textContent = fmtTime(state.time.totalToday||0);
+        $('#kpiProject', tpl).textContent = fmtTime(state.time.totalProject||0);
+        $('#kpiSessions', tpl).textContent = String((state.time.sessions||[]).length);
+        $('#kpiState', tpl).textContent = state.time.isTracking? 'Running' : 'Idle';
+        const sl = $('#sessionList', tpl);
+        sl.innerHTML = (state.time.sessions||[]).slice(-8).map(s=>`<div class="item"><span>${s.task}</span><span class="muted" style="font-size:12px">${new Date(s.start).toLocaleTimeString()} — ${new Date(s.end).toLocaleTimeString()} (${s.duration}m)</span></div>`).join('');
+      };
+      setKPIs();
+      host.appendChild(tpl);
+    }
+
+    function drawExport(host){
+      const tpl = $('#tpl-export').content.cloneNode(true);
+      $$('#tpl-export [data-preset]').forEach(()=>{}); // no-op to keep template alive
+      // preset buttons
+      $$('#tpl-export [data-preset]');
+      host.appendChild(tpl);
+      $$('#content [data-preset]').forEach(b=> b.onclick = ()=> exportPreset(b.dataset.preset));
+      $('#runCustomExport').onclick = ()=>{
+        const settings = { format:$('#fmt').value, quality:Number($('#qual').value), colorSpace:$('#cs').value, dpi:Number($('#dpi').value), size:[Number($('#w').value)||null, Number($('#h').value)||null], transparent:$('#transparent').checked };
+        toast('Custom export queued: '+JSON.stringify(settings));
+      };
+    }
+
+    // --- Actions ----------------------------------------------------------
+    function createVersion(){
+      const n = state.versions.length+1;
+      state.versions.unshift({ id:Date.now(), version:`v${n}.0`, author:'Current User', timestamp:Date.now(), description:'Manual save', thumbTxt:'New Version', changes:['Manual save'] });
+      persist(); route('versions'); refreshStats(); toast('Version saved.');
+    }
+
+    function startTracking(task){ state.time.isTracking=true; state.time.currentTask=task; state.time.sessionStart=Date.now(); persist(); }
+    function stopTracking(){
+      if(!state.time.isTracking) return;
+      const end = Date.now(); const durMin = Math.round((end - state.time.sessionStart)/60000);
+      state.time.isTracking=false; state.time.totalToday=(state.time.totalToday||0)+(durMin*60000); state.time.totalProject=(state.time.totalProject||0)+(durMin*60000);
+      (state.time.sessions=state.time.sessions||[]).push({start:state.time.sessionStart,end,task:state.time.currentTask,duration:durMin});
+      state.time.sessionStart=null; state.time.currentTask=null; persist(); updateTimeChrome(); toast('Tracking stopped.');
+    }
+
+    function exportPreset(kind){
+      const presets = { print:{dpi:300,colorSpace:'CMYK',format:'PDF'}, web:{dpi:72,colorSpace:'RGB',format:'PNG'}, social:{sizes:['1080x1080','1200x628','1080x1920'],format:'JPEG'}, mobile:{sizes:['@1x','@2x','@3x'],format:'PNG'} };
+      toast(`Export: ${kind} → ${JSON.stringify(presets[kind])}`);
+    }
+
+    async function exportBundle(){
+      const data = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a'); a.href = url; a.download = 'studio-bundle.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // --- RSS (no-CORS strategy + caching last-good) -----------------------
+    async function fetchRSS(feedUrl){
+      // Try direct (some feeds set CORS now); else rss2json; else Jina Reader proxy
+      try{
+        const r = await fetch(feedUrl, {mode:'cors'}); if(r.ok){ const txt = await r.text(); return parseRSS(txt, feedUrl); }
+      }catch(e){}
+      try{
+        const api = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
+        const r = await fetch(api); if(r.ok){ const j = await r.json(); if(j.items){ return j.items.map(x=>({title:x.title, link:x.link, date:x.pubDate})) } }
+      }catch(e){}
+      try{
+        const proxy = 'https://r.jina.ai/http/' + feedUrl.replace(/^https?:\/\//,'');
+        const r = await fetch(proxy); if(r.ok){ const txt = await r.text(); return parseRSS(txt, feedUrl); }
+      }catch(e){}
+      return [];
+    }
+
+    function parseRSS(xmlText, origin){
+      // super tiny RSS/Atom parser via DOMParser; tolerate Jina text too
+      try{
+        const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+        const it = [...doc.querySelectorAll('item')].map(n=>({
+          title: n.querySelector('title')?.textContent?.trim()||'(no title)',
+          link: n.querySelector('link')?.textContent?.trim()||origin,
+          date: n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || ''
+        }));
+        if(it.length) return it;
+        const ait = [...doc.querySelectorAll('entry')].map(n=>({
+          title: n.querySelector('title')?.textContent?.trim()||'(no title)',
+          link: n.querySelector('link')?.getAttribute('href')||origin,
+          date: n.querySelector('updated')?.textContent || n.querySelector('published')?.textContent || ''
+        }));
+        return ait;
+      }catch(e){ return []; }
+    }
+
+    async function loadRSS(){
+      $('#rssList').innerHTML = '<div class="muted">Loading…</div>';
+      const results = [];
+      for(const f of state.feeds){
+        const items = await fetchRSS(f);
+        for(const it of items){ results.push({...it, source:f}); }
+      }
+      results.sort((a,b)=> new Date(b.date||0) - new Date(a.date||0));
+      state.rssCache = results.slice(0, 60);
+      await idb.set('rss:last', state.rssCache);
+      renderRSS(state.rssCache);
+    }
+
+    function renderRSS(items){
+      const q = ($('#rssSearch').value||'').toLowerCase();
+      const list = $('#rssList');
+      const filtered = items.filter(x => x.title.toLowerCase().includes(q));
+      list.innerHTML = filtered.slice(0,60).map(x=>`<div class="item"><div class="col" style="flex:1"><a href="${x.link}" target="_blank" rel="noopener noreferrer">${x.title}</a><span class="muted" style="font-size:12px">${x.date ? new Date(x.date).toLocaleString() : ''}</span></div><span class="chip">${new URL(x.source).host}</span></div>`).join('') || '<div class="muted">No matches.</div>';
+    }
+
+    function renderFeedList(){
+      const fl = $('#feedList');
+      fl.innerHTML = state.feeds.map((f,i)=>`<div class="row" style="justify-content:space-between"><code class="muted" style="overflow:auto">${f}</code><button class="btn" data-rm="${i}">✖</button></div>`).join('');
+      fl.onclick = (e)=>{ const i = e.target?.dataset?.rm; if(i==null) return; state.feeds.splice(Number(i),1); persist(); renderFeedList(); loadRSS(); };
+    }
+    function addFeed(){
+      const val = $('#newFeed').value.trim(); if(!val) return; state.feeds.push(val); $('#newFeed').value=''; persist(); renderFeedList(); loadRSS();
+    }
+
+    // --- Ticker for timer -------------------------------------------------
+    function tick(){
+      if(state.time.isTracking){ const ms = Date.now() - state.time.sessionStart + (state.time.totalToday||0); $('#todayChip').textContent = fmtTime(ms); }
+      requestAnimationFrame(tick);
+    }
+
+    // --- Toast ------------------------------------------------------------
+    let toastTimer; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.add('hidden'), 2400); }
+
+    // --- Restore last RSS if offline -------------------------------------
+    window.addEventListener('load', async ()=>{ const last = await idb.get('rss:last'); if(last && (!navigator.onLine)){ state.rssCache = last; renderRSS(state.rssCache); } });
+  </script>
+</body>
+</html>
